@@ -1,12 +1,15 @@
 import React from 'react';
 import ContactInfo from './ContactInfo';
 import ContactDetail from './ContactDetail';
+import update from 'react-addons-update';
+import ContactCreate from './ContactCreate';
+import { runInThisContext } from 'vm';
 
 export default class Contact extends React.Component{
     constructor(props){
         super(props);
         this.state = {
-            selected: 0,
+            selected: -1,
             keyword: '',
             contactData: [
                 {name:'Park', phone: '01056584585'},
@@ -17,6 +20,10 @@ export default class Contact extends React.Component{
         }
         this.handleChange = this.handleChange.bind(this);
         this.handleClick = this.handleClick.bind(this);
+        
+        this.handleCreate = this.handleCreate.bind(this);
+        this.handleRemove = this.handleRemove.bind(this);
+        this.handleEdit   = this.handleEdit.bind(this);
     }
     handleChange(e){
         this.setState({keyword: e.target.value})
@@ -24,6 +31,35 @@ export default class Contact extends React.Component{
     handleClick(i){
         this.setState({selected: i});
     }
+    handleCreate(contact){
+        this.setState({
+            contactData: update(this.state.contactData, {
+                $push: [contact] 
+            })
+        });
+    }
+    handleRemove(){
+        if(this.state.selected < 0){
+            return;
+        }
+        this.setState({
+            contactData: update(this.state.contactData, {
+                $splice: [[this.selected, 1]] 
+            }),
+            selected: 0
+        });
+    }
+    handleEdit(name, phone){
+        this.setState({
+            contactData: update(this.state.contactData, {
+                [this.state.selected]: {
+                    name: { $set: name },
+                    phone: { $set: phone }
+                }
+            })
+        })
+    }
+
     render(){
         const mapToContact = (data) =>{
             data.sort((a,b)=>{
@@ -42,7 +78,7 @@ export default class Contact extends React.Component{
             );
             return data.map((e, i)=>{
                 return <ContactInfo contact={e} key={i}
-                onClick={()=> this.handleClick(i)}></ContactInfo>
+                onClick={()=>this.handleClick(i)}></ContactInfo>
             });
         };
         return (
@@ -53,7 +89,11 @@ export default class Contact extends React.Component{
                 onChange={this.handleChange}
                 />
                 {mapToContact(this.state.contactData)}
-                <ContactDetail contact={this.state.contactData[this.state.selected]}/>
+                <ContactDetail
+                    contact={this.state.contactData[this.state.selected]}
+                    onRemove={this.handleRemove}
+                />
+                <ContactCreate onCreate={this.handleCreate}/>
             </div>
         )
     }
