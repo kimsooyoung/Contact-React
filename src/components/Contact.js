@@ -25,6 +25,19 @@ export default class Contact extends React.Component{
         this.handleRemove = this.handleRemove.bind(this);
         this.handleEdit   = this.handleEdit.bind(this);
     }
+    componentWillMount(){
+        const contactData = localStorage.contactData;
+        if(contactData){
+            this.setState({
+                contactData: JSON.parse(contactData)
+            })
+        }
+    }
+    componentDidUpdate(prevProps, prevState){
+        if(JSON.stringify(prevState.contactData) != JSON.stringify(this.state.contactData)){
+            localStorage.contactData = JSON.stringify(this.state.contactData);
+        }
+    }
     handleChange(e){
         this.setState({keyword: e.target.value})
     }
@@ -68,7 +81,7 @@ export default class Contact extends React.Component{
                 return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
                });
             // data.sort();
-            console.log(data);
+            // console.log(data);
             data = data.filter(
                 (contact) => {
                     return (contact.name.toLowerCase()
@@ -92,6 +105,7 @@ export default class Contact extends React.Component{
                 <ContactDetail
                     contact={this.state.contactData[this.state.selected]}
                     onRemove={this.handleRemove}
+                    onEdit={this.handleEdit}
                 />
                 <ContactCreate onCreate={this.handleCreate}/>
             </div>
